@@ -1,0 +1,123 @@
+---
+title: "vlive_data_analysis"
+author: "Yifan Zhao"
+date: "5/9/2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+
+```{r}
+# import data scrapped from vlive
+clean_total_data <- read.csv("total_data.csv",stringsAsFactors = FALSE)
+# Vlive chooses some highlight clips from videos already uploaded by artists
+# and placed them under "Vpick"
+# in order to avoid repetition of videos, we want to exclude Vpick videos
+clean_total_data <- clean_total_data %>% filter(V.Pick.or.not == Artist)
+#convert "K", "M", "B" to actual numbers
+# for views, likes, and comments variables
+for(j in c(8,9,10)){
+  for(i in seq(nrow(clean_total_data))){
+  if(str_detect(clean_total_data[i,j],"K")){
+  number <- str_split(clean_total_data[i,j],"K")[[1]][1]
+  convert <- as.numeric(number) * 10^3
+  clean_total_data[i,j] <- convert
+  }else if(str_detect(clean_total_data[i,j],"M")){
+    number <- str_split(clean_total_data[i,j],"M")[[1]][1]
+    convert <- as.numeric(number) * 10^6
+    clean_total_data[i,j] <- convert
+  }else if(str_detect(clean_total_data[i,j],"B")){
+    number <- str_split(clean_total_data[i,j],"B")[[1]][1]
+    convert <- as.numeric(number) * 10^9
+    clean_total_data[i,j] <- convert
+  }
+}
+}
+#convert 'xx hours/minutes ago' to the date when we scrapped data
+result_date <- ""
+for (i in (1:nrow(clean_total_data))){
+   if(str_detect(clean_total_data$Date[i],"minutes")){
+    clean_total_data$Date[i] <- "2020. 05. 11. 00:00 AM"
+   }
+  if(str_detect(clean_total_data$Date[i],"hour")){
+    clean_total_data$Date[i] <- "2020. 05. 11. 00:00 AM"
+   }
+  
+}
+# exclude time in date variable
+for(i in (1:nrow(clean_total_data))){
+  string <- clean_total_data$Date[i]
+  part <- str_split(string,"\\.\\s")
+  day <- str_c(part[[1]][1],part[[1]][2],part[[1]][3],sep = "/")
+  result_date <- c(result_date,day)
+}
+# append result to data frame
+date_c <- result_date[2:(nrow(clean_total_data)+1)]
+clean_total_data <- clean_total_data %>% add_column(date_c = date_c)
+# add video_count variable
+vlive_final <- clean_total_data  %>%
+  group_by(date_c) %>% 
+  mutate(video_count_per_day = n()) 
+vlive_final <- vlive_final[,c(-1,-2)]
+only_count <- clean_total_data %>%
+  group_by(date_c) %>%
+  summarise(video_count_per_day = n())
+# export data
+write.csv(vlive_final, file = "vlive_final.csv")  
+write.csv(only_count, file = "only_count.csv")
+```
+
+
+
+```{r}
+# Data Visualization
+
+# Extract Month and Year and create separate columns
+vlive_data <- vlive_final %>% 
+  mutate(Month = month(ymd(vlive_final$date_c))) %>% 
+  mutate(Year = year(ymd(vlive_final$date_c)))
+
+# Remove influential points and filter data from Feb-April
+views_over_years <- vlive_data[vlive_data$Views < 100000000,] %>%
+  filter(Month %in% c(2,3,4)) %>% 
+  group_by(Year, Month) %>% 
+  summarise(Mean_Views = mean(Views)) %>% 
+  mutate(Month = factor(Month)) 
+
+
+# Remove influential points and filter data from Feb-April
+comments_over_years <- vlive_data[vlive_data$Views < 100000000,] %>%
+  filter(Month %in% c(2,3,4)) %>% 
+  group_by(Year, Month) %>% 
+  summarise(Mean_Comments = mean(Comment)) %>% 
+  mutate(Month = factor(Month)) 
+  
+# Create slopegraph
+views_g <- ggplot(data = views_over_years, aes(x = Month, y = Mean_Views, group = Year)) +
+  geom_line(aes(color = factor(Year)), size = 1) +
+  geom_point(aes(color = factor(Year)), size = 2) +
+  scale_color_manual(values=c("#D3D3D3", "#85a392", "#DEB887", "#4a69bb", "red"))+
+  labs(title = "Compare change in mean views across different years",
+       subtitle="Kpop artists", 
+       caption = "https://www.vlive.tv/channels?order=popular&tagSeq=18")
+
+# Create slopegraph
+comments_g <- ggplot(data = comments_over_years, aes(x = Month, y = Mean_Comments, group = Year)) +
+  geom_line(aes(color = factor(Year)), size = 1) +
+  geom_point(aes(color = factor(Year)), size = 2) +
+  scale_color_manual(values=c("#D3D3D3", "#85a392", "#DEB887", "#4a69bb", "red"))+
+  labs(title = "Compare change in mean comments across different years",
+       subtitle="Kpop artists", 
+       caption = "https://www.vlive.tv/channels?order=popular&tagSeq=18")
+
+views_g
+comments_g
+```
+
+
