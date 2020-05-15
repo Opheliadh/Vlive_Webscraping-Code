@@ -16,12 +16,17 @@ library(lubridate)
 
 
 ```{r}
+# import data scrapped from vlive
 clean_total_data <- read.csv("total_data.csv",stringsAsFactors = FALSE)
 
+# Vlive chooses some highlight clips from videos already uploaded by artists
+# and placed them under "Vpick"
+# in order to avoid repetition of videos, we want to exclude Vpick videos
 clean_total_data <- clean_total_data %>% filter(V.Pick.or.not == Artist)
 
 
 #convert "K", "M", "B" to actual numbers
+# for views, likes, and comments variables
 for(j in c(8,9,10)){
   for(i in seq(nrow(clean_total_data))){
   if(str_detect(clean_total_data[i,j],"K")){
@@ -52,7 +57,7 @@ for (i in (1:nrow(clean_total_data))){
   
 }
 
-#add date of days
+# exclude time in date variable
 for(i in (1:nrow(clean_total_data))){
   string <- clean_total_data$Date[i]
   part <- str_split(string,"\\.\\s")
@@ -60,29 +65,23 @@ for(i in (1:nrow(clean_total_data))){
   result_date <- c(result_date,day)
 }
 
-
+# append result to data frame
 date_c <- result_date[2:(nrow(clean_total_data)+1)]
 clean_total_data <- clean_total_data %>% add_column(date_c = date_c)
 
 
-#add video_count variable
+# add video_count variable
 vlive_final <- clean_total_data  %>%
   group_by(date_c) %>% 
   mutate(video_count_per_day = n()) 
 vlive_final <- vlive_final[,c(-1,-2)]
 
-#export data
-write.csv(vlive_final, file = "vlive_final.csv")  
-
-vlive_final %>% filter(date_c == "2014/07/28")
-
-sort(vlive_final$Date)
-
-
 only_count <- clean_total_data %>%
   group_by(date_c) %>%
   summarise(video_count_per_day = n())
 
+# export data
+write.csv(vlive_final, file = "vlive_final.csv")  
 write.csv(only_count, file = "only_count.csv")
 
 ```
