@@ -1,11 +1,18 @@
 ---
 title: "vlive_data_analysis"
-author: "Yifan Zhao"
+author: "Team KSJ"
 date: "5/9/2020"
 output:
   html_document:
     df_print: paged
 ---
+
+# Team member names and emails
+
+# Sophie Yun: sophieyun1229@gmail.com
+# Ophelia Dong: opheliadong@gmail.com
+# Yifan Zhao: zyf18@g.ucla.edu
+
 
 ```{r}
 library(tidyverse)
