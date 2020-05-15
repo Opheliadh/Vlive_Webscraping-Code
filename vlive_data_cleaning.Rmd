@@ -10,8 +10,6 @@ library(tidyverse)
 library(gganimate)
 library(CGPfunctions)
 library(lubridate)
-
-
 ```
 
 
