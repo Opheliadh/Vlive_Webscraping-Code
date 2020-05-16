@@ -11,6 +11,8 @@ import re
 # Ophelia Dong: opheliadong@gmail.com
 # Yifan Zhao: zyf18@g.ucla.edu
 
+# Data resource: https://www.vlive.tv/channels?order=popular&tagSeq=18
+
 # We want to scrape all the kpop channels on this page: https://www.vlive.tv/channels?order=popular&tagSeq=18 For
 # Each channel, we want to get its name, followers and information on all videos, including views, comments and likes
 # We mainly uses the selenium package to assist with the infinite scrolling and BeautifulSoup to extract information
