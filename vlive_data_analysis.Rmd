@@ -13,6 +13,8 @@ output:
 # Ophelia Dong: opheliadong@gmail.com
 # Yifan Zhao: zyf18@g.ucla.edu
 
+# Data resource: https://github.com/Opheliadh/Vlive_Webscraping-Code
+
 
 ```{r}
 library(tidyverse)
